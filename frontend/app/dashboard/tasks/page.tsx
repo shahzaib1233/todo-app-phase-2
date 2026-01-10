@@ -7,7 +7,7 @@ import { Modal } from '@/components/ui/modal';
 import { Task } from '@/types/task';
 import { taskService } from '@/services/task-service';
 
-export default function DashboardPage() {
+export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -18,7 +18,9 @@ export default function DashboardPage() {
     const fetchTasks = async () => {
       try {
         const tasks = await taskService.getTasks();
-        setTasks(tasks);
+        // Filter to show only non-completed tasks
+        const activeTasks = tasks.filter(task => !task.completed);
+        setTasks(activeTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
       } finally {
@@ -53,7 +55,6 @@ export default function DashboardPage() {
     if (confirm('Are you sure you want to delete this task?')) {
       try {
         await taskService.deleteTask(id);
-        // Filter out the deleted task by comparing both string representations to handle type differences
         setTasks(tasks.filter(task => task.id.toString() !== id.toString()));
       } catch (error) {
         console.error('Error deleting task:', error);
@@ -121,80 +122,50 @@ export default function DashboardPage() {
     );
   }
 
-  // Calculate stats
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const activeTasks = tasks.length - completedTasks;
-
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-300">Total Tasks</p>
-              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">{tasks.length}</p>
-            </div>
-            <div className="bg-blue-500/10 p-3 rounded-lg">
-              <span className="text-2xl">📋</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl border border-green-200 dark:border-green-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-green-600 dark:text-green-300">Completed</p>
-              <p className="text-3xl font-bold text-green-900 dark:text-green-100 mt-2">{completedTasks}</p>
-            </div>
-            <div className="bg-green-500/10 p-3 rounded-lg">
-              <span className="text-2xl">✅</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-xl border border-orange-200 dark:border-orange-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-orange-600 dark:text-orange-300">Active</p>
-              <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 mt-2">{activeTasks}</p>
-            </div>
-            <div className="bg-orange-500/10 p-3 rounded-lg">
-              <span className="text-2xl">⚡</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Manage your tasks efficiently</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Active Tasks</h1>
+          <p className="text-muted-foreground mt-1">Tasks that require your attention</p>
         </div>
         <Button
           onClick={handleAddNewTask}
-          className="bg-primary hover:bg-primary/90 transition-all duration-200 transform hover:scale-105"
+          className="bg-orange-500 hover:bg-orange-600 transition-all duration-200 transform hover:scale-105"
         >
           <span className="mr-2">+</span> Add New Task
         </Button>
       </div>
 
+      {/* Active Tasks Count */}
+      <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-xl border border-orange-200 dark:border-orange-800/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-orange-600 dark:text-orange-300">Active Tasks</p>
+            <p className="text-2xl font-bold text-orange-900 dark:text-orange-100 mt-1">{tasks.length}</p>
+          </div>
+          <div className="bg-orange-500/10 p-3 rounded-lg">
+            <span className="text-2xl">⚡</span>
+          </div>
+        </div>
+      </div>
+
       {/* Tasks List */}
       {tasks.length === 0 ? (
         <div className="text-center py-16">
-          <div className="mx-auto w-24 h-24 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full flex items-center justify-center mb-6">
-            <span className="text-4xl">📋</span>
+          <div className="mx-auto w-24 h-24 bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-full flex items-center justify-center mb-6">
+            <span className="text-4xl">📝</span>
           </div>
-          <h3 className="text-xl font-semibold mb-2">No tasks yet</h3>
+          <h3 className="text-xl font-semibold mb-2">No active tasks</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Get started by creating your first task. Your productivity journey begins here!
+            All caught up! You have no active tasks right now. Great job staying on top of things!
           </p>
           <Button
             onClick={handleAddNewTask}
-            className="bg-primary hover:bg-primary/90 transition-all duration-200"
+            className="bg-orange-500 hover:bg-orange-600 transition-all duration-200"
           >
-            <span className="mr-2">✨</span> Create Your First Task
+            <span className="mr-2">✨</span> Create New Task
           </Button>
         </div>
       ) : (
@@ -257,7 +228,7 @@ export default function DashboardPage() {
                 <input
                   type="text"
                   id="task-title-view"
-                  className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                  className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-900 dark:text-gray-100"
                   value={currentTask?.title || ''}
                   readOnly
                 />
@@ -269,7 +240,7 @@ export default function DashboardPage() {
                 </label>
                 <textarea
                   id="task-description-view"
-                  className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed resize-none"
+                  className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed resize-none text-gray-900 dark:text-gray-100"
                   rows={4}
                   value={currentTask?.description || ''}
                   readOnly
@@ -281,7 +252,7 @@ export default function DashboardPage() {
                   <label className="block text-sm font-medium mb-2">Status</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-900 dark:text-gray-100"
                     value={currentTask?.completed ? 'Completed' : 'Pending'}
                     readOnly
                   />
@@ -291,7 +262,7 @@ export default function DashboardPage() {
                   <label className="block text-sm font-medium mb-2">Created</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-900 dark:text-gray-100"
                     value={currentTask?.createdAt ? new Date(currentTask.createdAt).toLocaleString() : 'N/A'}
                     readOnly
                   />
@@ -303,7 +274,7 @@ export default function DashboardPage() {
                   <label className="block text-sm font-medium mb-2">Due Date</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-900 dark:text-gray-100"
                     value={new Date(currentTask.dueDate).toLocaleString()}
                     readOnly
                   />
@@ -320,7 +291,7 @@ export default function DashboardPage() {
                 </Button>
                 <Button
                   onClick={() => setModalMode('edit')}
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 transition-all"
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-500/90 transition-all"
                 >
                   Edit Task
                 </Button>
@@ -336,7 +307,7 @@ export default function DashboardPage() {
                 <input
                   type="text"
                   id="task-title"
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-gray-900 dark:text-gray-100"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-gray-900 dark:text-gray-100"
                   defaultValue={currentTask?.title || ''}
                   placeholder="Enter task title"
                   autoFocus
@@ -349,7 +320,7 @@ export default function DashboardPage() {
                 </label>
                 <textarea
                   id="task-description"
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-gray-900 dark:text-gray-100"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none text-gray-900 dark:text-gray-100"
                   rows={4}
                   defaultValue={currentTask?.description || ''}
                   placeholder="Enter task description (optional)"
@@ -366,7 +337,7 @@ export default function DashboardPage() {
                 </Button>
                 <Button
                   onClick={handleSaveTask}
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 transition-all"
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-500/90 transition-all"
                 >
                   {modalMode === 'edit' ? 'Update Task' : 'Create Task'}
                 </Button>

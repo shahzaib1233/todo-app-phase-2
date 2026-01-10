@@ -94,7 +94,7 @@ const authClient = {
 };
 
 // Base API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 // Create an API service with JWT token handling
 class ApiService {
@@ -143,6 +143,17 @@ class ApiService {
       ...options,
       headers,
     });
+
+    if (response.status === 401) {
+      // Unauthorized - redirect to login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('user_email');
+        window.location.href = '/signin';
+      }
+      throw new Error('Unauthorized - please login again');
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

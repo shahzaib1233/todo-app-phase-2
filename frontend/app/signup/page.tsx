@@ -10,6 +10,15 @@ import { authClient } from '@/lib/api';
 
 export default function SignupPage() {
   const router = useRouter();
+
+  // Check if user is already logged in and redirect to dashboard
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',

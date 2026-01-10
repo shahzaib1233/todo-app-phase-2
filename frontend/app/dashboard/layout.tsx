@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeProvider } from '@/context/theme';
-import { getUserInfoFromToken, clearUserInfo } from '@/services/user-service';
+import { userService } from '@/services/user-service';
 
 export default function DashboardLayout({
   children,
@@ -14,24 +14,34 @@ export default function DashboardLayout({
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   useEffect(() => {
-    // Get user info from JWT token
-    const userInfo = getUserInfoFromToken();
-    if (userInfo) {
-      setUser({
-        name: userInfo.name,
-        email: userInfo.email
-      });
-    } else {
-      // Redirect to sign in if no user info found
-      window.location.href = '/signin';
-    }
+    // Get user info from backend API
+    const fetchUser = async () => {
+      try {
+        const userInfo = await userService.getCurrentUser();
+        if (userInfo) {
+          setUser({
+            name: userInfo.name,
+            email: userInfo.email
+          });
+        } else {
+          // Redirect to sign in if no user info found
+          window.location.href = '/signin';
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        // Redirect to sign in if error occurs
+        window.location.href = '/signin';
+      }
+    };
+
+    fetchUser();
   }, []);
 
   const handleSignOut = () => {
     // Clear stored user info
-    clearUserInfo();
-    // Remove auth token
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('user_name');
+      localStorage.removeItem('user_email');
       localStorage.removeItem('auth_token');
     }
     // Redirect to sign in page
@@ -51,13 +61,15 @@ export default function DashboardLayout({
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/10">
         <Header user={user} onSignOut={handleSignOut} />
         <div className="flex">
           <Sidebar user={user} onSignOut={handleSignOut} />
-          <main className="flex-1 md:ml-64 pt-4 pb-12">
-            <div className="container">
-              {children}
+          <main className="flex-1 md:ml-64 pt-6 pb-12">
+            <div className="container px-4 sm:px-6 lg:px-8">
+              <div className="max-w-7xl mx-auto">
+                {children}
+              </div>
             </div>
           </main>
         </div>
